@@ -3,6 +3,13 @@ import string
 
 
 CARACTERES_ESPECIALES = "!@#$%^&*"
+CARACTERES_AMBIGUOS = "O0Il1"
+
+
+def _quitar_caracteres_ambiguos(caracteres):
+    return "".join(
+        caracter for caracter in caracteres if caracter not in CARACTERES_AMBIGUOS
+    )
 
 
 def generar_contrasena(
@@ -11,29 +18,38 @@ def generar_contrasena(
     minusculas=True,
     numeros=True,
     especiales=True,
+    evitar_ambiguos=True,
 ):
     """Genera una contraseña con al menos un carácter de cada tipo elegido."""
-    grupos = []
+    grupos_caracteres = []
     if mayusculas:
-        grupos.append(string.ascii_uppercase)
+        grupos_caracteres.append(string.ascii_uppercase)
     if minusculas:
-        grupos.append(string.ascii_lowercase)
+        grupos_caracteres.append(string.ascii_lowercase)
     if numeros:
-        grupos.append(string.digits)
+        grupos_caracteres.append(string.digits)
     if especiales:
-        grupos.append(CARACTERES_ESPECIALES)
+        grupos_caracteres.append(CARACTERES_ESPECIALES)
 
-    if not grupos:
+    if not grupos_caracteres:
         raise ValueError("Debe seleccionar al menos un tipo de carácter.")
     if not 8 <= longitud <= 32:
         raise ValueError("La longitud debe estar entre 8 y 32 caracteres.")
-    if longitud < len(grupos):
+    if longitud < len(grupos_caracteres):
         raise ValueError("La longitud es insuficiente para los tipos seleccionados.")
 
-    caracteres = "".join(grupos)
-    contrasena = [secrets.choice(grupo) for grupo in grupos]
+    if evitar_ambiguos:
+        grupos_caracteres = [
+            _quitar_caracteres_ambiguos(grupo) for grupo in grupos_caracteres
+        ]
+
+    conjunto_caracteres = "".join(grupos_caracteres)
+    contrasena = [
+        secrets.choice(grupo_caracteres) for grupo_caracteres in grupos_caracteres
+    ]
     contrasena.extend(
-        secrets.choice(caracteres) for _ in range(longitud - len(contrasena))
+        secrets.choice(conjunto_caracteres)
+        for _ in range(longitud - len(contrasena))
     )
     secrets.SystemRandom().shuffle(contrasena)
     return "".join(contrasena)
